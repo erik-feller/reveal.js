@@ -82,16 +82,108 @@
                  it is in fact a malevolent agent of chaos. It unpicks the seams of reality
                  (and the 'IO' monad) so that the normal rules no longer apply. </p>
           </section>
+          <section>
+            <p> This is kind of a cheap shot against the ByteString library but it illustrates the point well </p> 
+          </section>
         </section>
         <section> <!-- Slide stack introducing the safe language extension --!>
-          
+          <section data-markdown>
+            ## A Solution
+            The safe language extension provides a way to enforce that only a safe subset of Haskell is used
+          </section>
+          <section data-markdown>
+            #### Safe accomplishes this goal by restricting some features of the language in order to maintain some safety features of haskell
+            * referential transparency
+            * module boundary control
+            * semantic consistency
+            * a strict subset of language
+          </section>
+          <section>
+            <p> The combination of these four items reinforces trust in the types and module import lists </p>
+          </section>
         </section>
         <section> <!-- slide stack showing how to use Safe and -fpackaged-trust --!>
+          <section>
+            <h2>Using Safe</h2>
+            <p> Safe can be used like any language extension </p>
+            <p> Just add {-# LANGUAGE Safe #-} to your module </p>
+
+            <pre><code class="language-haskell">
+            {-# LANGUAGE Safe #-}
+            module Example where
+            </code></pre>
+
+            Just kidding it isn't really that easy
+          </section>
+          <section>
+            <p>Safe haskell actually includes 3 different language extensions</p>
+            <ul>
+              <li> <b>Safe</b> - denoting that a module contains only safe code</li>
+              <li> <b>Trustworthy</b> - denoting that a module has unsafe components but the author thinks they are using them safely</li>
+              <li> <b>Untrusted</b> - the author knows that the module is not Safe and doesn't want it to compile into any Safe modules</li>
+            </ul>
+          </section>
+          <section>
+            <p> When managing which modules marked trustworthy can actually be trusted, a problem arises managing the large number of imports that each module usually contains</p>
+            <p> This is remedied in Safe Haskell by introducing package trust, denoted by the <b>-fpackage-trust</b> compile flag</p>
+          </section> 
+          <section>
+            <p> Each package recognized by GHC can be assigned a trusted or untrusted value which allows large swaths of code to be trusted all at once </p>
+            <p> An example of this is the popular Data.Bytestring library which is in the bytestring package, marked trustworthy by hackage</p>
+          </section>
+          <section>
+            <pre><code class="language-haskell">
+            {-# LANGUAGE Safe #-}
+            module Example where
+            import GoodModule
+            import ObviouslySafeModule
+            </code></pre>
+            <pre><code class="language-haskell">
+            {-# LANGUAGE Trustworthy #-}
+            module GoodModule where
+            import Data.ByteString
+            import safe DifferentSafeModule
+            </code></pre>
+          </section> 
+          <section>
+            <p> This example would only compile if we also made sure to tell GHC at compile time that we trust bytestring. </p>
+            <p> If we didn't it would refuse to compile because even though we trust GoodModule we do not trust the bystring package and therefore distrust Data.ByteString as well </p>
+          </section>
+          <section>
+            <p> This gives us the powerful ability to audit packages that we use for security issues by default and anything that is unapproved can be rejected by the compiler </p>
+            <p> It also prevents the sneaky inclusion of packages that we don't trust inside packages we do trust since trust is checked recursively all the way down a module. </p>
+          </section>
         </section>
         <section> <!-- slide stack discussing hard limitations of safe and justifying them --!>
+          <section data-markdown>
+            ## Limitations of Safe
+            As I'm sure you've guessed safe does have some hard limitations on what you can do in your 
+          </section> 
+          <section>
+            <h3>Generalised Newtype Deriving</h3>
+            GeneralisedNewtypeDeriving is entirely disabled due to the way it can be used to violate module boundaries
+          </section>
+          <section> 
+            <h3>GHC.Generic</h3>
+            Custom Generic instances are forbidden in Safe Haskell modules. The anyclass derivation strategy is not allowed either. These restrictions are both implimented to protect invariance.
+          </section>
+          <section> 
+            <h3>Template Haskell</h3>
+            Due to the fact that TH can give access to a modules protected functions and constructors it isn't allowed within a Safe module
+          </section>
+          <section> 
+            <h3>Overlapping Instances</h3>
+            While not prohibited by Safe, OverlappingInstances are restricted and their use is evaluated at compile time to ensure that an outside module cannot affect the intended function of any other module.
+          </section>
+          <section> 
+            <h3>FFI</h3>
+            The foreign function interface is restricted to only allowing functions to be imported which have IO type signatures to ensure that uncontrolled side effects are not realized
+          </section>
         </section>
         <section> <!-- slide stack offering discussion on whether or not safe is practical irl --!>
         </section>
+        <section> <!-- an appendix containing examples that justify the limitations --!>
+        </section> 
 			</div>
 		</div>
 
