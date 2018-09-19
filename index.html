@@ -30,11 +30,13 @@
           <p>Erik Feller</p>
         </section>
         <section> <!-- Slide detailing basic Haskell advantages --!>
-          <section data-markdown>
-            ## Why is Haskell the Best?
-            * Strong Type System
-            * No Side Effects
-            * We All Love It
+          <section id="fragments">
+            <h2>Why is Haskell the Best?</h2>
+            <ul>
+              <li class="fragment">Strong Type System</li>
+              <li class="fragment">No Side Effects</li>
+              <li class="fragment">We All Love It</li>
+            </ul>
           </section>
         </section>
         <section> <!-- Slide explaining the security benefits of Haskell --!>
@@ -91,54 +93,54 @@
             ## A Solution
             The safe language extension provides a way to enforce that only a safe subset of Haskell is used
           </section>
-          <section data-markdown>
-            #### Safe accomplishes this goal by restricting some features of the language in order to maintain some safety features of haskell
-            * referential transparency
-            * module boundary control
-            * semantic consistency
-            * a strict subset of language
-          </section>
-          <section>
-            <p> The combination of these four items reinforces trust in the types and module import lists </p>
+          <section id="fragments">
+          <p> Safe accomplishes this goal by restricting some features of the language in order to maintain some safety features of haskell </p>
+            <ul>
+              <li class="fragment">referential transparency</li>
+              <li class="fragment">module boundary control</li>
+              <li class="fragment">semantic consistency</li>
+              <li class="fragment">a strict subset of language</li>
+            </ul>
+            <p class="fragment"> The combination of these four items reinforces trust in the types and module import lists </p>
           </section>
         </section>
         <section> <!-- slide stack showing how to use Safe and -fpackaged-trust --!>
-          <section>
+          <section id="fragments">
             <h2>Using Safe</h2>
-            <p> Safe can be used like any language extension </p>
-            <p> Just add {-# LANGUAGE Safe #-} to your module </p>
+            <p class="fragment"> Safe can be used like any language extension </p>
+            <p class="fragment"> Just add {-# LANGUAGE Safe #-} to your module </p>
 
-            <pre><code class="language-haskell">
+            <pre class="fragment"><code class="language-haskell" data-trim contenteditable>
             {-# LANGUAGE Safe #-}
             module Example where
             </code></pre>
 
-            Just kidding it isn't really that easy
+            <p class="fragment">Just kidding it isn't really that easy</p>
           </section>
-          <section>
+          <section id="fragments">
             <p>Safe haskell actually includes 3 different language extensions</p>
             <ul>
-              <li> <b>Safe</b> - denoting that a module contains only safe code</li>
-              <li> <b>Trustworthy</b> - denoting that a module has unsafe components but the author thinks they are using them safely</li>
-              <li> <b>Untrusted</b> - the author knows that the module is not Safe and doesn't want it to compile into any Safe modules</li>
+              <li class="fragment"> <b>Safe</b> - denoting that a module contains only safe code</li>
+              <li class="fragment"> <b>Trustworthy</b> - denoting that a module has unsafe components but the author thinks they are using them safely</li>
+              <li class="fragment"> <b>Untrusted</b> - the author knows that the module is not Safe and doesn't want it to compile into any Safe modules</li>
             </ul>
           </section>
-          <section>
+          <section id="fragments">
             <p> When managing which modules marked trustworthy can actually be trusted, a problem arises managing the large number of imports that each module usually contains</p>
-            <p> This is remedied in Safe Haskell by introducing package trust, denoted by the <b>-fpackage-trust</b> compile flag</p>
+            <p class="fragment"> This is remedied in Safe Haskell by introducing package trust, denoted by the <b>-fpackage-trust</b> compile flag</p>
           </section> 
-          <section>
+          <section id="fragments">
             <p> Each package recognized by GHC can be assigned a trusted or untrusted value which allows large swaths of code to be trusted all at once </p>
-            <p> An example of this is the popular Data.Bytestring library which is in the bytestring package, marked trustworthy by hackage</p>
+            <p class="fragment"> An example of this is the popular Data.Bytestring library which is in the bytestring package, marked trustworthy by hackage</p>
           </section>
           <section>
-            <pre><code class="language-haskell">
+            <pre><code class="language-haskell" data-trim contenteditable>
             {-# LANGUAGE Safe #-}
             module Example where
             import GoodModule
             import ObviouslySafeModule
             </code></pre>
-            <pre><code class="language-haskell">
+            <pre><code class="language-haskell" data-trim contenteditable>
             {-# LANGUAGE Trustworthy #-}
             module GoodModule where
             import Data.ByteString
@@ -146,7 +148,7 @@
             </code></pre>
           </section> 
           <section>
-            <p> This example would only compile if we also made sure to tell GHC at compile time that we trust bytestring. </p>
+            <p> This example would only compile if we also made sure to tell GHC at compile time that we trust bytestring using <b>-trust bytestring</b> on the command line. </p>
             <p> If we didn't it would refuse to compile because even though we trust GoodModule we do not trust the bystring package and therefore distrust Data.ByteString as well </p>
           </section>
           <section>
@@ -181,6 +183,8 @@
           </section>
         </section>
         <section> <!-- slide stack offering discussion on whether or not safe is practical irl --!>
+          <h2> Practicality of Safe Haskell </h2>
+          <p> Do you think that Safe Haskell is practical in real world applications? </p>
         </section>
         <section> <!-- an appendix containing examples that justify the limitations --!>
         </section> 
@@ -195,6 +199,8 @@
 			// - https://github.com/hakimel/reveal.js#configuration
 			// - https://github.com/hakimel/reveal.js#dependencies
 			Reveal.initialize({
+        width: '90%',
+        height: '90%',
 				dependencies: [
 					{ src: 'plugin/markdown/marked.js' },
 					{ src: 'plugin/markdown/markdown.js' },
