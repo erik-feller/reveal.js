@@ -4,13 +4,13 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>Safe Haskell Language</title>
 
 		<link rel="stylesheet" href="css/reveal.css">
 		<link rel="stylesheet" href="css/theme/solarized.css">
 
 		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="lib/css/zenburn.css">
+    <link rel="stylesheet" href="lib/css/solarized-dark.css">
 
 		<!-- Printing and PDF exports -->
 		<script>
@@ -40,12 +40,57 @@
         <section> <!-- Slide explaining the security benefits of Haskell --!>
           <section>
             <h2>Haskell and Security</h2>
-            <p> These traits that make Haskell fun to program in also allow us to make some security assumptions about our code </p>
+            <p> The traits that make Haskell fun to program in also allow us to make some security assumptions about our code </p>
           </section>
           <section id="fragments">
-            <p> Restricting IO can make our code inherently safe in ways that other languages can't guarantee </p>
-            <p class="fragment"> by constraining where and when IO happens we can have safer code than allowed by languages like Java </p>
+            <p> Restricting IO/side effects can make our code inherently safer </p>
+            <p class="fragment"> constraining where and when IO happens we can have greater control over how our program affects the underlying system</p>
           </section>
+        </section>
+        <section> <!-- Slide stack about making code useful --!> 
+          <section id="fragments">
+            <h2> Making code useful </h2>
+            <p class="fragment"> Unfortunately code often needs IO to be useful. </p>
+            <p class="fragment"> Sometimes we want to write Haskell programs that are useful </p>
+            <p class="fragment"> IO isn't even inherently dangerous to use in our programs </p>
+          </section>
+          <section id="fragments">
+            <p> There are however many ways to use IO unsafely. <i>unsafePerformIO</i> being the most obvious example </p>
+            <p class="fragment"> </p>
+          </section>
+        </section>
+        <section> <!-- slide stack with an example from Data.Bytestring --!>
+          <section>
+            <h2> An Example </h2>
+            <p> Suppose that you are using a library in your code that has only pure functions. </p>
+            <p class="fragment"> It would be reasonable to assume that there is no security concern due to IO however </p>
+            <p class="fragment"> Functions like unsafePerformIO could subvert that assumption </p>
+          </section>
+          <section>
+            <p> Look at this example from the popular Data.ByteString library </p>
+            <pre><code class="language-haskell" data-trim contenteditable>
+            accursedUnutterablePerformIO :: IO a -> a
+            accursedUnutterablePerformIO (IO m) = case m realWorld# of (# _, r #) -> r
+
+            inlinePerformIO :: IO a -> a
+            inlinePerformIO = accursedUnutterablePerformIO
+            </code></pre>
+          </section>
+          <section> 
+            <p> Which is accompanied by a note saying </p>
+            <p>  This \"function\" has a superficial similarity to 'unsafePerformIO' but
+                 it is in fact a malevolent agent of chaos. It unpicks the seams of reality
+                 (and the 'IO' monad) so that the normal rules no longer apply. </p>
+          </section>
+        </section>
+        <section> <!-- Slide stack introducing the safe language extension --!>
+          
+        </section>
+        <section> <!-- slide stack showing how to use Safe and -fpackaged-trust --!>
+        </section>
+        <section> <!-- slide stack discussing hard limitations of safe and justifying them --!>
+        </section>
+        <section> <!-- slide stack offering discussion on whether or not safe is practical irl --!>
         </section>
 			</div>
 		</div>
