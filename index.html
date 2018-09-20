@@ -34,10 +34,18 @@
             <h2>Why is Haskell the Best?</h2>
             <ul>
               <li class="fragment">Strong Type System</li>
-              <li class="fragment">No Side Effects</li>
+              <li class="fragment">No Side Effects (Unintentional Ones)</li>
               <li class="fragment">We All Love It</li>
             </ul>
           </section>
+        </section>
+        <section> <!-- Slide defining security, Safe compliant, safety --!>
+          <h2>Some Definitions</h2>
+          <ul>
+            <li><b>security</b> - referencing the system &amp; software security that can be codified into the language itself (i.e. secure information flows, safe execution of arbitrary code)</li>
+            <li><b>Safe</b> - considered safe by the language extension. This is the safety that GHC enforces when you have the language extension on making sure that you don't break any of the rules that accompany it.</li>
+            <li><b>typesafe</b> - considered safe in terms of types</li> 
+          </ul>
         </section>
         <section> <!-- Slide explaining the security benefits of Haskell --!>
           <section>
@@ -45,8 +53,9 @@
             <p> The traits that make Haskell fun to program in also allow us to make some security assumptions about our code </p>
           </section>
           <section id="fragments">
-            <p> Restricting IO/side effects can make our code inherently safer </p>
+            <p> Restricting IO and side effects can make our code inherently safer </p>
             <p class="fragment"> constraining where and when IO happens we can have greater control over how our program affects the underlying system</p>
+            <p class="fragment"> more rigid type safety can prevent existing code from running in strange and unintended ways</p>
           </section>
         </section>
         <section> <!-- Slide stack about making code useful --!> 
@@ -57,7 +66,7 @@
             <p class="fragment"> IO isn't even inherently dangerous to use in our programs </p>
           </section>
           <section id="fragments">
-            <p> There are however many ways to use IO unsafely. <i>unsafePerformIO</i> being the most obvious example </p>
+            <p> There are however many ways to use IO unsafely, <i>unsafePerformIO</i> being the most obvious example </p>
             <p class="fragment"> </p>
           </section>
         </section>
@@ -65,8 +74,8 @@
           <section>
             <h2> An Example </h2>
             <p> Suppose that you are using a library in your code that has only pure functions. </p>
-            <p class="fragment"> It would be reasonable to assume that there is no security concern due to IO however </p>
-            <p class="fragment"> Functions like unsafePerformIO could subvert that assumption </p>
+            <p class="fragment"> It would be reasonable to assume that there is no security concern due to IO however; </p>
+            <p class="fragment"> functions like unsafePerformIO could subvert that assumption </p>
           </section>
           <section>
             <p> Look at this example from the popular Data.ByteString library </p>
@@ -80,7 +89,7 @@
           </section>
           <section> 
             <p> Which is accompanied by a note saying </p>
-            <p>  This \"function\" has a superficial similarity to 'unsafePerformIO' but
+            <p>  This "function" has a superficial similarity to 'unsafePerformIO' but
                  it is in fact a malevolent agent of chaos. It unpicks the seams of reality
                  (and the 'IO' monad) so that the normal rules no longer apply. </p>
           </section>
@@ -137,14 +146,14 @@
             <pre><code class="language-haskell" data-trim contenteditable>
             {-# LANGUAGE Safe #-}
             module Example where
-            import GoodModule
-            import ObviouslySafeModule
+              import GoodModule
+              import ObviouslySafeModule
             </code></pre>
             <pre><code class="language-haskell" data-trim contenteditable>
             {-# LANGUAGE Trustworthy #-}
             module GoodModule where
-            import Data.ByteString
-            import safe DifferentSafeModule
+              import Data.ByteString
+              import safe DifferentSafeModule
             </code></pre>
           </section> 
           <section>
@@ -159,11 +168,11 @@
         <section> <!-- slide stack discussing hard limitations of safe and justifying them --!>
           <section data-markdown>
             ## Limitations of Safe
-            As I'm sure you've guessed safe does have some hard limitations on what you can do in your 
+            As I'm sure you've guessed safe does have some hard limitations on what you can do in your code
           </section> 
           <section>
             <h3>Generalised Newtype Deriving</h3>
-            GeneralisedNewtypeDeriving is entirely disabled due to the way it can be used to violate module boundaries
+            GeneralisedNewtypeDeriving is entirely disabled due to the way it can be used to violate module boundaries. This causes Data.Coerce to be considered unsafe.
           </section>
           <section> 
             <h3>GHC.Generic</h3>
@@ -181,12 +190,89 @@
             <h3>FFI</h3>
             The foreign function interface is restricted to only allowing functions to be imported which have IO type signatures to ensure that uncontrolled side effects are not realized
           </section>
+          <section>
+            <p>GeneralisedNewtypeDeriving</p>
+            <pre><code class="language-haskell" data-trim contenteditable>
+module MinList (
+    MinList, newMinList, insertMinList 
+) where
+
+data MinList a = MinList a [a] deriving Show
+
+newMinList n = MinList n []
+
+insertMinList s@(MinList m xs) n
+  | n > m = MinList m (n:xs)
+  | otherwise = s 
+
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+module Main where
+import MinList
+
+class IntIso t where
+  intIso :: c t → c Int
+instance IntIso Int where 
+  intIso = id
+
+newtype I = I Int deriving (Eq, IntIso)
+
+-- we reverse the usual comparison order
+instance Ord I where
+  compare (I a) (I b) = compare b a
+  
+nums = [1,4,0,1,-5,2,3]
+
+goodList :: MinList Int
+goodList = foldl insertMinList
+                (newMinList $ head nums)
+                (tail nums)
+badList :: MinList Int
+badList = intIso $ foldl (λx y → insertMinList x $ I y)
+                  (newMinList $ I $ head nums)
+                  (tail nums)
+            </code></pre>
+          </section>
+          <section>
+            <p>OverlappingInstances<p>
+            <pre><code class="language-haskell" data-trim contenteditable>
+{-# LANGUAGE Safe #-}
+module Class (TC(..)) where
+  class TC a where { op :: a -> String }
+
+{-# LANGUAGE Safe #-}
+module Dangerous (TC(..)) where
+  import Class
+
+  instance
+    {-# OVERLAPS #-}
+    TC [Int] where { op _ = "[Int]" }
+
+{-# LANGUAGE Safe #-}
+module TCB_Runner where
+  import Class
+  import Dangerous
+
+  instance
+    TC [a] where { op _ = "[a]" }
+
+  f :: String
+  f = op ([1,2,3,4] :: [Int])
+            </code></pre>
+          </section>
         </section>
         <section> <!-- slide stack offering discussion on whether or not safe is practical irl --!>
           <h2> Practicality of Safe Haskell </h2>
           <p> Do you think that Safe Haskell is practical in real world applications? </p>
         </section>
         <section> <!-- an appendix containing examples that justify the limitations --!>
+          <section>
+            <h2> Appendix </h2>
+          </section>
+          <section>
+            <h2> Sources </h2>
+            <p>https://simonmar.github.io/bib/papers/safe-haskell.pdf</p>
+            <p>http://downloads.haskell.org/~ghc/latest/docs/html/users_guide/safe_haskell.html</p>
+          </section>
         </section> 
 			</div>
 		</div>
